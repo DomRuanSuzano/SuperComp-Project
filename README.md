@@ -98,3 +98,16 @@ mpirun -np <num_processos> mpi_openmp arquivo_de_entrada.txt
 ```
 
 Substitua `<num_processos>` pelo número desejado de processos MPI e `arquivo_de_entrada.txt` pelo nome do arquivo contendo a descrição do problema.
+
+## Conclusão
+
+A análise dos resultados obtidos para o Problema do Roteamento de Veículos (VRP) demonstra diferentes desempenhos entre os algoritmos testados: Brute Force, Local Search, OpenMP e OpenMP + MPI.
+
+![Resultados](output.png)
+
+Ao comparar os tempos de execução dos algoritmos, fica evidente que o Brute Force é o menos eficiente à medida que o número de nós aumenta, devido ao crescimento exponencial do espaço de busca. Por outro lado, o algoritmo Local Search se destaca como o mais rápido, oferecendo tempos de execução significativamente menores em comparação com os outros métodos. No entanto, é importante notar que a solução fornecida pela Busca Local não é necessariamente a solução exata para o problema, mas sim uma solução localmente ótima.
+
+O algoritmo OpenMP mostrou-se uma melhoria considerável em relação ao Brute Force, aproveitando a paralelização para reduzir os tempos de execução. Além disso, a combinação de OpenMP com MPI (OpenMP + MPI) manteve tempos de execução próximos aos do OpenMP puro, mesmo em sistemas distribuídos.
+
+Em suma, enquanto o Brute Force oferece uma solução exata, seu desempenho decai rapidamente com o aumento do tamanho do problema. O algoritmo Local Search oferece tempos de execução mais rápidos, embora não garanta a solução exata. Por outro lado, o OpenMP e o OpenMP + MPI fornecem uma abordagem eficiente para reduzir os tempos de execução, especialmente em problemas de grande escala.
+

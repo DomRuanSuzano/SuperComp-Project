@@ -32,24 +32,24 @@ Para executar o algoritmo de força bruta, utilize o seguinte comando:
 
 Substitua `arquivo_de_entrada.txt` pelo nome do arquivo contendo a descrição do problema.
 
-## OpenMP
+## Busca Local
 
-O OpenMP é uma API para programação paralela de memória compartilhada, que permite que os programas aproveitem múltiplos núcleos em uma única máquina para acelerar o processamento.
+A busca local é uma heurística de melhoria que busca iterativamente melhorar uma solução inicial realizando pequenas modificações em busca de uma solução ótima local. No contexto do Problema do Roteamento de Veículos (VRP), a busca local pode ser aplicada para encontrar uma rota de custo mínimo para cada veículo, respeitando as restrições de capacidade e visitando todos os clientes.
 
 **Pontos Positivos:**
-- Aproveita o paralelismo de memória compartilhada para acelerar o processamento em sistemas multicore.
-- Fácil de usar e integrar em código C/C++ existente.
+- Pode encontrar soluções de alta qualidade em um tempo razoável para problemas de tamanho moderado.
+- Mais eficiente em termos de tempo de execução do que a busca exaustiva.
 
 **Pontos Negativos:**
-- Limitado ao paralelismo em uma única máquina.
-- Escalabilidade limitada para problemas de grande porte.
+- Não garante uma solução ótima global, apenas uma solução localmente ótima.
+- A qualidade da solução depende da escolha da solução inicial e do movimento de vizinhança.
 
 ### Como Executar
 
-Para executar a versão OpenMP do algoritmo, utilize o seguinte comando:
+Para executar o algoritmo de busca local, utilize o seguinte comando:
 
 ```
-./local_search arquivo_de_entrada.txt
+./localsearch arquivo_de_entrada.txt
 ```
 
 Substitua `arquivo_de_entrada.txt` pelo nome do arquivo contendo a descrição do problema.

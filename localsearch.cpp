@@ -7,11 +7,16 @@
 #include <tuple>
 #include <climits>
 #include <chrono>
+#include <random>
 
 using namespace std;
 using namespace std::chrono;
 
-void readGraphFromFile(const string& filename, int& num_nodes, vector<pair<int, int>>& nodes, int& num_edges, vector<vector<int>>& graph) {
+bool contains(const vector<int>& vec, int value) {
+    return value != 0 && find(vec.begin(), vec.end(), value) != vec.end();
+}
+
+void readGraphFromFile(const string& filename, int& num_nodes, vector<tuple<int, int, int>>& nodes, int& num_edges, map<int, vector<pair<int, int>>>& graph) {
     ifstream file(filename);
     if (!file) {
         cerr << "Erro ao abrir o arquivo" << endl;
@@ -20,87 +25,118 @@ void readGraphFromFile(const string& filename, int& num_nodes, vector<pair<int, 
 
     file >> num_nodes;
     nodes.resize(num_nodes);
-    for (int i = 0; i < num_nodes; ++i) {
-        int x, y;
-        file >> x >> y;
-        nodes[i] = make_pair(x, y);
+    for (int i = 1; i < num_nodes; ++i) {
+        int city, demand;
+        file >> city >> demand;
+        nodes[i] = make_tuple(city, demand, 0);
     }
 
     file >> num_edges;
-    graph.assign(num_nodes, vector<int>(num_nodes, 0));
     for (int i = 0; i < num_edges; ++i) {
         int from, to, weight;
         file >> from >> to >> weight;
-        graph[from][to] = weight;
-        graph[to][from] = weight; // assuming the graph is undirected
+        graph[from].emplace_back(to, weight);
     }
 }
 
-int nearestNeighbor(int start, const vector<vector<int>>& graph, vector<bool>& visited) {
-    int nearest = -1;
-    int minDistance = INT_MAX;
-    for (int i = 0; i < graph[start].size(); ++i) { // Corrigindo o laço para iterar apenas sobre os vizinhos de start
-        if (!visited[i] && graph[start][i] != 0 && graph[start][i] < minDistance) {
-            minDistance = graph[start][i];
-            nearest = i;
+int calculateTotalDemand(const vector<tuple<int, int, int>>& nodes) {
+    int total_demand = 0;
+    for (const auto& node : nodes) {
+        total_demand += get<1>(node);
+    }
+    return total_demand;
+}
+
+void randomSwap(vector<int>& route) {
+    static random_device rd;
+    static mt19937 gen(rd());
+
+    uniform_int_distribution<int> distribution(1, route.size() - 2);
+    int i = distribution(gen);
+    int j = distribution(gen);
+
+    swap(route[i], route[j]);
+}
+
+int calculateRouteCost(const vector<int>& route, const map<int, vector<pair<int, int>>>& graph) {
+    int cost = 0;
+    for (int i = 0; i < route.size() - 1; ++i) {
+        int from = route[i];
+        int to = route[i + 1];
+        for (const auto& edge : graph.at(from)) {
+            if (edge.first == to) {
+                cost += edge.second;
+                break;
+            }
         }
     }
-    return nearest;
+    return cost;
 }
 
+void localSearch(vector<int>& route, int& cost, const map<int, vector<pair<int, int>>>& graph) {
+    int iteration = 0;
+    int max_iterations = 1000; // Limite máximo de iterações
 
-vector<int> nearestNeighborHeuristic(const vector<vector<int>>& graph) {
-    int num_nodes = graph.size();
-    vector<bool> visited(num_nodes, false);
-    vector<int> route;
-    int current_city = 0; // start from city 0
-    visited[current_city] = true;
-    route.push_back(current_city);
-    for (int i = 1; i < num_nodes; ++i) {
-        int next_city = nearestNeighbor(current_city, graph, visited);
-        if (next_city != -1) {
-            visited[next_city] = true;
-            route.push_back(next_city);
-            current_city = next_city;
+    while (iteration < max_iterations) {
+        vector<int> new_route = route;
+        randomSwap(new_route);
+        int new_cost = calculateRouteCost(new_route, graph);
+        if (new_cost < cost) {
+            route = new_route;
+            cost = new_cost;
+            iteration = 0; // Reinicia as iterações se houve melhoria
         } else {
-            cerr << "Error: Invalid next city found." << endl;
-            return {}; // return empty vector in case of error
+            iteration++;
         }
     }
-    route.push_back(0); // return to starting city
-    return route;
 }
 
-void displayRoute(const vector<int>& route) {
-    cout << "Best route: ";
+void displayRoute(const vector<int>& route, int cost) {
+    cout << "Rota: ";
     for (int city : route) {
         cout << city << " ";
     }
-    cout << endl;
+    cout << "\nCusto: " << cost << endl;
 }
 
 int main(int argc, char *argv[]) {
+
     if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <input_file>" << endl;
+        cerr << "Uso: " << argv[0] << " <arquivo_de_entrada>" << endl;
         return 1;
     }
 
     string filename = argv[1];
 
     int num_nodes;
-    vector<pair<int, int>> nodes;
+    vector<tuple<int, int, int>> nodes;
     int num_edges;
-    vector<vector<int>> graph;
+    map<int, vector<pair<int, int>>> graph;
 
     readGraphFromFile(filename, num_nodes, nodes, num_edges, graph);
 
+    // Gerar uma rota inicial aleatória
+    vector<int> initial_route;
+    for (int i = 1; i < num_nodes; ++i) {
+        initial_route.push_back(i);
+    }
+    random_shuffle(initial_route.begin(), initial_route.end());
+
+    initial_route.insert(initial_route.begin(), 0); // Adiciona o depósito no início e fim da rota
+    initial_route.push_back(0);
+
+    int initial_cost = calculateRouteCost(initial_route, graph);
+
     auto start_time = high_resolution_clock::now();
-    vector<int> route = nearestNeighborHeuristic(graph);
+
+    // Aplica a busca local na rota inicial
+    localSearch(initial_route, initial_cost, graph);
+
     auto end_time = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end_time - start_time);
 
-    displayRoute(route);
-    cout << "Execution time: " << duration.count() << " ms" << endl;
+    displayRoute(initial_route, initial_cost);
+    cout << "Tempo de busca local: " << duration.count() << " ms" << endl;
 
     return 0;
 }

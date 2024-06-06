@@ -131,10 +131,10 @@ int main(int argc, char* argv[]) {
     int minimal_cost;
     findBestRoute(potential_solutions, best_route, minimal_cost);
     auto end_time = high_resolution_clock::now();
-    auto duration = duration_cast<seconds>(end_time - start_time);
+    auto duration = duration_cast<milliseconds>(end_time - start_time);
 
     displayBestRoute(best_route, minimal_cost);
-    cout << "Tempo de busca de rotas: " << duration.count() << " segundos" << endl;
+    cout << "Tempo de busca de rotas: " << duration.count() << " ms" << endl;
 
     return 0;
 }

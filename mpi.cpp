@@ -116,12 +116,14 @@ int main(int argc, char *argv[]) {
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
+    string filename = argv[1];
+
     int num_nodes;
     vector<tuple<int, int, int>> nodes;
     int num_edges;
     map<int, vector<pair<int, int>>> graph;
 
-    readGraphFromFile("grafo.txt", num_nodes, nodes, num_edges, graph);
+    readGraphFromFile(filename, num_nodes, nodes, num_edges, graph);
 
     int initial_supply = 15;
     int initial_cost = 0, start_node = 0, initial_cities_visited = 0;
@@ -140,10 +142,10 @@ int main(int argc, char *argv[]) {
         findBestRoute(potential_solutions, best_route, minimal_cost);
 
         auto end_time = high_resolution_clock::now();
-        auto duration = duration_cast<seconds>(end_time - start_time);
+        auto duration = duration_cast<milliseconds>(end_time - start_time);
 
         displayBestRoute(best_route, minimal_cost);
-        cout << "Tempo de busca de rotas: " << duration.count() << " segundos" << endl;
+        cout << "Tempo de busca de rotas: " << duration.count() << " ms" << endl;
     }
 
     MPI_Finalize();
